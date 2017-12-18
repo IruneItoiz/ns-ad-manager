@@ -19,7 +19,8 @@ class Ns_Ad_Manager {
 		 * Data Models
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ad-cpt.php';
-
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-utils.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-ad-shortcode.php';
 	}
 
 	/**
@@ -42,5 +43,7 @@ class Ns_Ad_Manager {
 	private function run() {
 		$cpt = new AdCPT;
 		$cpt->init();
+		$shortcode = new Ad_Shortcode;
+		$shortcode->run();
 	}
 }
