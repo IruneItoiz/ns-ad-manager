@@ -1,6 +1,6 @@
 <?php
 
-class Ad_Shortcode {
+class Ad_Display {
 
 	function __construct() {
 
@@ -28,12 +28,11 @@ class Ad_Shortcode {
 
 		$ad = $this->get_ad_by_slug( $ad );
 
-		if (!empty($ad))
-		{
+		if ( ! empty( $ad ) ) {
 			$ad_content = $ad->post_content;
 
 			if ( $parameters['is_amp'] ) {
-				$ad_content = $this->build_amp_ad( $ad_content ) ;
+				$ad_content = $this->build_amp_ad( $ad_content );
 			}
 
 		} else {
@@ -43,7 +42,39 @@ class Ad_Shortcode {
 		return $ad_content;
 	}
 
+	public function insert_default_ads( $content ) {
 
+		//Bail if not on a post
+		if (! is_single()) return $content;
+
+		$options = get_option( 'ns_ads_settings' );
+
+
+		$top = '';
+		$bottom = '';
+
+		if ( $this->is_amp() )
+		{
+			$top = $this->build_amp_ad($options['ns_ads_settings_top_amp']);
+			$bottom = $this->build_amp_ad($options['ns_ads_settings_bottom_amp']);
+		} else {
+			$top = $options['ns_ads_settings_top_desktop'];
+			$bottom = $options['ns_ads_settings_bottom_desktop'];
+		}
+
+		$content = $top."\n".$content."\n".$bottom;
+
+		return $content;
+	}
+
+	private function is_amp()
+	{
+		if ( function_exists( 'is_amp_endpoint' ) && is_amp_endpoint() ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 	private function parse_attributes( $atts ) {
 		//Default values
 		$parameters = [
@@ -51,7 +82,7 @@ class Ad_Shortcode {
 			'ad_slugs' => [],
 		];
 
-		if ( function_exists( 'is_amp_endpoint' ) && is_amp_endpoint() ) {
+		if ( $this->is_amp() ) {
 			$parameters['is_amp'] = true;
 			$slugs                = explode( ',', $atts['amp'] );
 		} else {
@@ -105,6 +136,8 @@ class Ad_Shortcode {
 	}
 
 	public function run() {
-		add_shortcode( 'ns-ad', array( $this, 'show_ad' ) );
+		add_shortcode( 'ns-ad', [ $this, 'show_ad' ] );
+		//Add default ads to top and bottom
+		add_filter( 'the_content', [ $this,'insert_default_ads' ] );
 	}
 }
